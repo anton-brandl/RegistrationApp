@@ -3,12 +3,10 @@
  
 #include "ui_configwin.h"
 #include <iostream> 
-#include "LoadSeriesSafeAsVolume.h"
 #include <QFileDialog>
 
 #include "itkImageToVTKImageFilter.h"
 
-#include "RegisterTest2D.h" 
 
 #include "vtkSmartPointer.h"
 #include "vtkImageActor.h"
@@ -17,6 +15,9 @@
 #include "vtkRenderWindow.h"
 #include "vtkRenderWindowInteractor.h"
 #include "vtkResliceImageViewer.h"
+
+#include "IO/LoadSeriesSafeAsVolume.h"
+#include "Registration/RegisterTest2D.h" 
 
 namespace Ui {
     class ConfigWin;

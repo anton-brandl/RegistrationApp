@@ -1,3 +1,4 @@
+#pragma once
 
 template <class ImageType, class FieldType, unsigned int Dimension>
 class Visualizer

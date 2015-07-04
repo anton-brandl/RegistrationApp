@@ -12,7 +12,7 @@ find_package(Qt5Widgets)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
  
-QT5_WRAP_CPP(tst_hdr_moc configwin.h)
+QT5_WRAP_CPP(tst_hdr_moc configwin.h configwin.cpp)
 QT5_WRAP_UI(tst_form_hdr configwin.ui)
  
 add_library(configwin ${tst_hdr_moc} ${tst_form_hdr})
@@ -31,11 +31,12 @@ else()
   set(Glue ItkVtkGlue)
 endif()
 
-add_library(ItkFunctionality LoadSeriesSafeAsVolume.cxx LoadSeriesSafeAsVolume.h RegisterTest2D.cxx RegisterTest2D.h Toolbox.cxx Toolbox.h ImageShort2D.h ImageShort2D.cxx itkImageToVTKImageFilter.h DeformableRegistrationTest.cpp )
-add_library(VtkVisualization Visualizer.h HeatmapVisualizer.h)
+add_library(Registration Registration/RegisterTest2D.cxx Registration/RegisterTest2D.h Registration/DeformableRegistrationTest.cpp )
+add_library(Visualization Visualization/Visualizer.h Visualization/HeatmapVisualizer.h)
+add_library(IO IO/LoadSeriesSafeAsVolume.cxx IO/LoadSeriesSafeAsVolume.h)
 
 add_executable(RegistrationApp Main.cpp configwin )
 qt5_use_modules(RegistrationApp Core Gui Widgets)
 
 
-target_link_libraries(RegistrationApp ${Glue} ${ITK_LIBRARIES} ItkFunctionality VtkVisualization ${VTK_LIBRARIES})
+target_link_libraries(RegistrationApp ${Glue} ${ITK_LIBRARIES} Registration Visualization IO ${VTK_LIBRARIES})
