@@ -1,0 +1,6 @@
+-IC:/Users/Anton/Projects/RegistrationApp/src
+-IC:/Users/Anton/Projects/RegistrationApp
+-DWIN32
+-o
+C:/Users/Anton/Projects/RegistrationApp/src/moc_configwin.cpp
+C:/Users/Anton/Projects/RegistrationApp/src/configwin.h
