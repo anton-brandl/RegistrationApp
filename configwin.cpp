@@ -144,32 +144,29 @@ void ConfigWin::updateShowImage(Imagetype type)
 {
 	loadImage(type);
 	typedef  float           PixelType;
-	typedef itk::Image< PixelType, 2 >  ImageType;
+	typedef itk::Image< PixelType, 2 >  ImageType2D;
+	typedef itk::Image< PixelType, 3 >  ImageType3D;
 
-	if (ui->rbVolume->isChecked()) {
-		typedef itk::Image< PixelType, 3 >  ImageType;
-	}
-	else if (ui->rbImage->isChecked()) {
-		typedef itk::Image< PixelType, 2 >  ImageType;
-	}
 
 	//typedef itk::ImageFileReader< ImageType  >   ImageReaderType;
 	//ImageReaderType::Pointer   imageReader = ImageReaderType::New();
-	typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;
+	typedef itk::ImageToVTKImageFilter<ImageType2D> ConnectorType2D;
+	typedef itk::ImageToVTKImageFilter<ImageType3D> ConnectorType3D;
 	
 	std::string filename = "";
 	QVTKWidget* widget;
 	vtkSmartPointer<vtkResliceImageViewer> image_view;
-	ConnectorType::Pointer connector = ConnectorType::New();
+	ConnectorType2D::Pointer connector2d = ConnectorType2D::New();
+	ConnectorType3D::Pointer connector3d = ConnectorType3D::New();
 	if (type == Imagetype::Fixed)
 	{
 		
 		widget = ui->qvtkFixed;
 		image_view = image_view_fixed;
 		if (ui->rbVolume->isChecked()) {
-			connector->SetInput(fixedVolume);
+			connector3d->SetInput(fixedVolume);
 		} else if (ui->rbImage->isChecked()) {
-			connector->SetInput(fixedImage);
+			connector2d->SetInput(fixedImage);
 		}
 	}
 	else if (type == Imagetype::Moving)
@@ -178,19 +175,26 @@ void ConfigWin::updateShowImage(Imagetype type)
 		widget = ui->qvtkMoving;		
 		image_view = image_view_moving; 
 		if (ui->rbVolume->isChecked()) {
-			connector->SetInput(movingVolume);
+			connector3d->SetInput(movingVolume);
 		}
 		else if (ui->rbImage->isChecked()) {
-			connector->SetInput(movingImage);
+			connector2d->SetInput(movingImage);
 		}
 	}
 
 	vtkSmartPointer<vtkImageActor> actor =
 		vtkSmartPointer<vtkImageActor>::New();
 
-	connector->Update();
 	vtkImageData * image = vtkImageData::New();
-	image->DeepCopy(connector->GetOutput());
+	if (ui->rbVolume->isChecked()) {
+		connector3d->Update();
+		image->DeepCopy(connector3d->GetOutput());
+	}
+	else if (ui->rbImage->isChecked()){
+		connector2d->Update();
+		image->DeepCopy(connector2d->GetOutput());
+	}
+	
 
 	//set VTK Viewer to QVTKWidget in Qt's UI
 	widget->SetRenderWindow(image_view->GetRenderWindow());
