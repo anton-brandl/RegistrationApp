@@ -15,8 +15,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 QT5_WRAP_CPP(tst_hdr_moc configwin.h configwin.cpp)
 QT5_WRAP_UI(tst_form_hdr configwin.ui)
  
-add_library(configwin ${tst_hdr_moc} ${tst_form_hdr})
-qt5_use_modules(configwin Core Widgets)
 
 
 find_package(ITK REQUIRED)
@@ -31,11 +29,15 @@ else()
   set(Glue ItkVtkGlue)
 endif()
 
-add_library(Registration Registration/RegisterTest2D.cxx Registration/RegisterTest2D.h Registration/DeformableRegistrationTest.cpp )
+add_library(Registration Registration/RegisterTest2D.cxx Registration/Registrator.h Registration/DeformableRegistrationTest.cpp )
 add_library(Visualization Visualization/Visualizer.h Visualization/HeatmapVisualizer.h)
-add_library(IO IO/LoadSeriesSafeAsVolume.cxx IO/LoadSeriesSafeAsVolume.h)
+add_library(IO IO/LoadSeriesSafeAsVolume.cxx IO/LoadSeriesSafeAsVolume.h IO/ImageLoader.h IO/ImageLoader.cpp)
 
-add_executable(RegistrationApp Main.cpp configwin )
+
+add_library(configwin ${tst_hdr_moc} ${tst_form_hdr})
+qt5_use_modules(configwin Core Widgets)
+
+add_executable(RegistrationApp Main.cpp Core.h Core.cpp configwin )
 qt5_use_modules(RegistrationApp Core Gui Widgets)
 
 

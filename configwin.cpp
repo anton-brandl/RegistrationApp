@@ -1,5 +1,6 @@
 #include "configwin.h"
 
+
 ConfigWin::ConfigWin(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConfigWin)
@@ -44,37 +45,71 @@ void ConfigWin::registerImages()
 	std::string after = "after.png";
 	std::string before = "before.png";
 
-	/*const    unsigned int    Dimension = 2;
-	typedef  float           PixelType;
+	typedef float PixelType;
+	ImageLoader loader;
+	typedef itk::Image<PixelType, 2> ImageType2D;
+	typedef itk::Vector< PixelType, 2 >          VectorPixelType2D;
+	typedef itk::Image< VectorPixelType2D, 2 > DisplacementFieldImageType2D;
 
-	typedef itk::Image< PixelType, Dimension >  FixedImageType;
-	typedef itk::Image< PixelType, Dimension >  MovingImageType;
+	typedef itk::Image<PixelType, 3> VolumeType3D;
+	typedef itk::Vector< PixelType, 3 > VectorPixelType3D;
+	typedef itk::Image< VectorPixelType3D, 3 > DisplacementFieldImageType3D;
 
-	typedef itk::ImageFileReader< FixedImageType  >   FixedImageReaderType;
-	typedef itk::ImageFileReader< MovingImageType >   MovingImageReaderType;
-	FixedImageReaderType::Pointer   fixedImageReader = FixedImageReaderType::New();
-	MovingImageReaderType::Pointer  movingImageReader = MovingImageReaderType::New();
+	if (ui->rbImage->isChecked()) {
+		itk::SmartPointer<ImageType2D> fixedImage = loader.loadDicomImage<PixelType>(image1.toStdString());
+		itk::SmartPointer<ImageType2D> movingImage = loader.loadDicomImage<PixelType>(image2.toStdString());
+		
+		Registrator reg;
+		itk::SmartPointer<DisplacementFieldImageType2D> field = reg.deformableRegistrationTest<ImageType2D, DisplacementFieldImageType2D, 2>(fixedImage, movingImage);
 
-	fixedImageReader->SetFileName(image1.toStdString());
-	movingImageReader->SetFileName(image2.toStdString());
-*/
-	
-	
-	//registerTest2D(image1.toStdString(), image2.toStdString(), output.toStdString(), after, before);
-	deformableRegistrationTest(image1.toStdString(), image2.toStdString(), output.toStdString(), "outputDisplacement.mha", "outputField.mha");
+		HeatmapVisualizer<ImageType2D, DisplacementFieldImageType2D, 2> heatmapVis;
+
+		heatmapVis.setImage(fixedImage);
+		heatmapVis.setField(field);
+		heatmapVis.visualize();
+	}
+	else if (ui->rbImage->isChecked()) {
+		VolumeType3D::Pointer fixedVolume = loader.loadDicomVolume<PixelType>(image1.toStdString());
+		VolumeType3D::Pointer movingVolume = loader.loadDicomVolume<PixelType>(image2.toStdString());
+
+
+		Registrator reg;
+		DisplacementFieldImageType3D::Pointer field = reg.deformableRegistrationTest<VolumeType3D, DisplacementFieldImageType3D, 3>(fixedVolume, movingVolume);
+
+		HeatmapVisualizer<VolumeType3D, DisplacementFieldImageType3D, 3> heatmapVis;
+
+		heatmapVis.setImage(fixedVolume);
+		heatmapVis.setField(field);
+		heatmapVis.visualize();
+	}
+	//deformableRegistrationTest(image1.toStdString(), image2.toStdString(), output.toStdString(), "outputDisplacement.mha", "outputField.mha");
+
 }
 
 void ConfigWin::browseMovingImage()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Open Moving Image"), "", "All Files (*.*);;Siemens Dicom (*.IMA);;Dicom (*.dcm)");
+	QString filename;
+	if (ui->rbVolume->isChecked()) {
+		filename = QFileDialog::getExistingDirectory(this, tr("Open Moving Volume"));
+	}
+	else if (ui->rbImage->isChecked()) {
+		filename = QFileDialog::getOpenFileName(this, tr("Open Moving Image"), "", "All Files (*.*);;Siemens Dicom (*.IMA);;Dicom (*.dcm)");
+	}
+	
 	ui->txtMovingImagePath->setText(filename);
-
+	updateShowMovingImage();
 
 }
 
 void ConfigWin::browseFixedImage()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Open Fixed Image"), "", "All Files (*.*);;Siemens Dicom (*.IMA);;Dicom (*.dcm)");
+	QString filename;
+	if (ui->rbVolume->isChecked()) {
+		filename = QFileDialog::getExistingDirectory(this, tr("Open Moving Volume"));
+	}
+	else if (ui->rbImage->isChecked()) {
+		filename = QFileDialog::getOpenFileName(this, tr("Open Moving Image"), "", "All Files (*.*);;Siemens Dicom (*.IMA);;Dicom (*.dcm)");
+	}
 	ui->txtFixedImagePath->setText(filename); 
 	updateShowFixedImage();
 }
@@ -145,6 +180,4 @@ void ConfigWin::updateShowImage(Imagetype type)
 
 
 	widget->update();
-
-	
 }

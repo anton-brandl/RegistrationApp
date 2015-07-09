@@ -43,7 +43,7 @@
 //
 // Software Guide : EndLatex
 
-#include "RegisterTest2D.h"
+#include "Registrator.h"
 
 
 class CommandIterationUpdate : public itk::Command
@@ -84,7 +84,7 @@ public:
 };
 
 
-int registerTest2D(std::string image1, std::string image2, std::string output, std::string differenceAfter, std::string differenceBefore)
+int Registrator::translationRegistration2DTest(std::string image1, std::string image2, std::string output, std::string differenceAfter, std::string differenceBefore)
 {
 
 

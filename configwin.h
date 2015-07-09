@@ -17,7 +17,7 @@
 #include "vtkResliceImageViewer.h"
 
 #include "IO/LoadSeriesSafeAsVolume.h"
-#include "Registration/RegisterTest2D.h" 
+#include "Registration/Registrator.h" 
 
 namespace Ui {
     class ConfigWin;

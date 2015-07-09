@@ -271,6 +271,45 @@
     </rect>
    </property>
   </widget>
+  <widget class="QGroupBox" name="gbDimension">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>340</y>
+     <width>120</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>2D/3D</string>
+   </property>
+   <widget class="QRadioButton" name="rbImage">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Image</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="rbVolume">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Volume</string>
+    </property>
+   </widget>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
