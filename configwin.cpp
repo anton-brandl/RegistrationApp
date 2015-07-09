@@ -195,12 +195,16 @@ void ConfigWin::updateShowImage(Imagetype type)
 		image->DeepCopy(connector2d->GetOutput());
 	}
 	
-
+	vtkSmartPointer<vtkImageFlip> flipYFilter =
+		vtkSmartPointer<vtkImageFlip>::New();
+	flipYFilter->SetFilteredAxis(1); // flip y axis
+	flipYFilter->SetInputData(image);
+	flipYFilter->Update();
 	//set VTK Viewer to QVTKWidget in Qt's UI
 	widget->SetRenderWindow(image_view->GetRenderWindow());
 	image_view->SetupInteractor(widget->GetRenderWindow()->GetInteractor());
 	//Set input image to VTK viewer
-	image_view->SetInputData(image);
+	image_view->SetInputData(flipYFilter->GetOutput());
 	image_view->SetSlice(image_view->GetSliceMax() / 2);
 	image_view->GetRenderer()->ResetCamera();
 	image_view->Render();
