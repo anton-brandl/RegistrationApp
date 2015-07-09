@@ -1,5 +1,17 @@
 #include "configwin.h"
 
+itk::SmartPointer<itk::Image<float, 2>> loadDicomImage(std::string src)
+{
+	const    unsigned int    ImageDimension = 2;
+	typedef itk::Image< float, ImageDimension > ImageType;
+	typedef itk::ImageFileReader< ImageType  > ImageReaderType;
+
+	ImageReaderType::Pointer  imageReader = ImageReaderType::New();
+
+	imageReader->SetFileName(src);
+	imageReader->Update();
+	return imageReader->GetOutput();
+}
 
 ConfigWin::ConfigWin(QWidget *parent) :
     QDialog(parent),
@@ -39,14 +51,13 @@ void ConfigWin::testOutput()
  
 void ConfigWin::registerImages()
 {
-	QString image1(ui->txtFixedImagePath->text());
-	QString image2(ui->txtMovingImagePath->text());
+	
 	QString output(ui->txtOutputPath->text());
 	std::string after = "after.png";
 	std::string before = "before.png";
 
-	typedef float PixelType;
-	ImageLoader loader;
+	
+//	ImageLoader loader;
 	typedef itk::Image<PixelType, 2> ImageType2D;
 	typedef itk::Vector< PixelType, 2 >          VectorPixelType2D;
 	typedef itk::Image< VectorPixelType2D, 2 > DisplacementFieldImageType2D;
@@ -56,8 +67,8 @@ void ConfigWin::registerImages()
 	typedef itk::Image< VectorPixelType3D, 3 > DisplacementFieldImageType3D;
 
 	if (ui->rbImage->isChecked()) {
-		itk::SmartPointer<ImageType2D> fixedImage = loader.loadDicomImage<PixelType>(image1.toStdString());
-		itk::SmartPointer<ImageType2D> movingImage = loader.loadDicomImage<PixelType>(image2.toStdString());
+	//	itk::SmartPointer<ImageType2D> fixedImage = loader.loadDicomImage<PixelType>(image1.toStdString());
+	//	itk::SmartPointer<ImageType2D> movingImage = loader.loadDicomImage<PixelType>(image2.toStdString());
 		
 		Registrator reg;
 		itk::SmartPointer<DisplacementFieldImageType2D> field = reg.deformableRegistrationTest<ImageType2D, DisplacementFieldImageType2D, 2>(fixedImage, movingImage);
@@ -68,9 +79,9 @@ void ConfigWin::registerImages()
 		heatmapVis.setField(field);
 		heatmapVis.visualize();
 	}
-	else if (ui->rbImage->isChecked()) {
-		VolumeType3D::Pointer fixedVolume = loader.loadDicomVolume<PixelType>(image1.toStdString());
-		VolumeType3D::Pointer movingVolume = loader.loadDicomVolume<PixelType>(image2.toStdString());
+	else if (ui->rbVolume->isChecked()) {
+//		VolumeType3D::Pointer fixedVolume = loader.loadDicomVolume<PixelType>(image1.toStdString());
+//		VolumeType3D::Pointer movingVolume = loader.loadDicomVolume<PixelType>(image2.toStdString());
 
 
 		Registrator reg;
@@ -110,7 +121,7 @@ void ConfigWin::browseFixedImage()
 	else if (ui->rbImage->isChecked()) {
 		filename = QFileDialog::getOpenFileName(this, tr("Open Moving Image"), "", "All Files (*.*);;Siemens Dicom (*.IMA);;Dicom (*.dcm)");
 	}
-	ui->txtFixedImagePath->setText(filename); 
+	ui->txtFixedImagePath->setText(filename);
 	updateShowFixedImage();
 }
 
@@ -131,36 +142,48 @@ void ConfigWin::updateShowMovingImage() {
 
 void ConfigWin::updateShowImage(Imagetype type)
 {
-	const    unsigned int    Dimension = 2;
+	loadImage(type);
 	typedef  float           PixelType;
+	typedef itk::Image< PixelType, 2 >  ImageType;
 
-	typedef itk::Image< PixelType, Dimension >  ImageType;
+	if (ui->rbVolume->isChecked()) {
+		typedef itk::Image< PixelType, 3 >  ImageType;
+	}
+	else if (ui->rbImage->isChecked()) {
+		typedef itk::Image< PixelType, 2 >  ImageType;
+	}
 
-	typedef itk::ImageFileReader< ImageType  >   ImageReaderType;
-	ImageReaderType::Pointer   imageReader = ImageReaderType::New();
+	//typedef itk::ImageFileReader< ImageType  >   ImageReaderType;
+	//ImageReaderType::Pointer   imageReader = ImageReaderType::New();
 	typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;
 	
 	std::string filename = "";
 	QVTKWidget* widget;
 	vtkSmartPointer<vtkResliceImageViewer> image_view;
+	ConnectorType::Pointer connector = ConnectorType::New();
 	if (type == Imagetype::Fixed)
 	{
-		filename = ui->txtFixedImagePath->text().toStdString();
+		
 		widget = ui->qvtkFixed;
 		image_view = image_view_fixed;
-
+		if (ui->rbVolume->isChecked()) {
+			connector->SetInput(fixedVolume);
+		} else if (ui->rbImage->isChecked()) {
+			connector->SetInput(fixedImage);
+		}
 	}
 	else if (type == Imagetype::Moving)
 	{
-		filename = ui->txtMovingImagePath->text().toStdString();
+		
 		widget = ui->qvtkMoving;		
-		image_view = image_view_moving;
+		image_view = image_view_moving; 
+		if (ui->rbVolume->isChecked()) {
+			connector->SetInput(movingVolume);
+		}
+		else if (ui->rbImage->isChecked()) {
+			connector->SetInput(movingImage);
+		}
 	}
-
-	imageReader->SetFileName(filename);
-	ConnectorType::Pointer connector = ConnectorType::New();
-
-	connector->SetInput(imageReader->GetOutput());
 
 	vtkSmartPointer<vtkImageActor> actor =
 		vtkSmartPointer<vtkImageActor>::New();
@@ -180,4 +203,31 @@ void ConfigWin::updateShowImage(Imagetype type)
 
 
 	widget->update();
+}
+
+void ConfigWin::loadImage(Imagetype type) {
+	QString fixed(ui->txtFixedImagePath->text());
+	QString moving(ui->txtMovingImagePath->text());
+
+	ImageLoader loader;
+	typedef itk::Image<PixelType, 2> ImageType2D;
+	typedef itk::Vector< PixelType, 2 >          VectorPixelType2D;
+	typedef itk::Image< VectorPixelType2D, 2 > DisplacementFieldImageType2D;
+
+	typedef itk::Image<PixelType, 3> VolumeType3D;
+	typedef itk::Vector< PixelType, 3 > VectorPixelType3D;
+	typedef itk::Image< VectorPixelType3D, 3 > DisplacementFieldImageType3D;
+
+	if (ui->rbImage->isChecked()) {
+		if (type==Imagetype::Fixed)
+			fixedImage = loadDicomImage(fixed.toStdString());
+		else if (type==Imagetype::Moving)
+			movingImage = loadDicomImage(moving.toStdString());
+	}
+	else if (ui->rbVolume->isChecked()) {
+		if (type == Imagetype::Fixed)
+			fixedVolume = loader.loadDicomVolume<PixelType>(fixed.toStdString());
+		else if (type == Imagetype::Moving)
+			movingVolume = loader.loadDicomVolume<PixelType>(moving.toStdString());
+	}
 }

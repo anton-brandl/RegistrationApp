@@ -29,9 +29,12 @@ else()
   set(Glue ItkVtkGlue)
 endif()
 
-add_library(Registration Registration/RegisterTest2D.cxx Registration/Registrator.h Registration/DeformableRegistrationTest.cpp )
-add_library(Visualization Visualization/Visualizer.h Visualization/HeatmapVisualizer.h)
-add_library(IO IO/LoadSeriesSafeAsVolume.cxx IO/LoadSeriesSafeAsVolume.h IO/ImageLoader.h IO/ImageLoader.cpp)
+include_directories ("${PROJECT_SOURCE_DIR}/Registration")
+add_subdirectory (Registration) 
+include_directories ("${PROJECT_SOURCE_DIR}/Visualization")
+add_subdirectory (Visualization) 
+include_directories ("${PROJECT_SOURCE_DIR}/IO")
+add_subdirectory (IO) 
 
 
 add_library(configwin ${tst_hdr_moc} ${tst_form_hdr})

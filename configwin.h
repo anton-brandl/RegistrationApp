@@ -6,7 +6,8 @@
 #include <QFileDialog>
 
 #include "itkImageToVTKImageFilter.h"
-
+#include <itkImage.h>
+#include <itkSmartPointer.h>
 
 #include "vtkSmartPointer.h"
 #include "vtkImageActor.h"
@@ -42,10 +43,16 @@ private slots:
 	void updateShowMovingImage();
 
 private:
+	typedef float PixelType;
 	void updateShowImage(ConfigWin::Imagetype type);
+	void loadImage(ConfigWin::Imagetype type);
 	Ui::ConfigWin *ui;
 	vtkSmartPointer<vtkResliceImageViewer> image_view_moving;
 	vtkSmartPointer<vtkResliceImageViewer> image_view_fixed;
+	itk::SmartPointer<itk::Image<PixelType, 2>> fixedImage;
+	itk::SmartPointer<itk::Image<PixelType, 2>> movingImage;
+	itk::SmartPointer<itk::Image<PixelType, 3>> fixedVolume;
+	itk::SmartPointer<itk::Image<PixelType, 3>> movingVolume;
 };
  
 #endif // CONFIGWIN_H

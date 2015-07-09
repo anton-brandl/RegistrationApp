@@ -56,8 +56,8 @@
 
 #include "itkCastImageFilter.h"
 
-#include "Visualization/HeatmapVisualizer.h"
-#include "IO/ImageLoader.h"
+#include "../Visualization/HeatmapVisualizer.h"
+#include "../IO/ImageLoader.h"
 #include <itkSmartPointer.h>
 
 class Registrator {

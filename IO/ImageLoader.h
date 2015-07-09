@@ -4,6 +4,7 @@
 #include "itkImageSeriesReader.h"
 #include "itkGDCMImageIO.h"
 #include "itkGDCMSeriesFileNames.h"
+#include "itkSmartPointer.h"
 #include <stdio.h>
 #include <vector>
 
@@ -14,7 +15,7 @@ class ImageLoader
 public:
 	
 	template <typename PixelType>
-	typename itk::Image<PixelType, 2>::Pointer loadDicomImage(std::string src)
+	typename itk::SmartPointer<itk::Image<PixelType, 2>> loadDicomImage(std::string src)
 	{
 		const    unsigned int    ImageDimension = 2;
 		typedef itk::Image< float, ImageDimension > ImageType;
@@ -29,7 +30,7 @@ public:
 	
 
 	template <typename PixelType>
-	typename itk::Image<PixelType, 3>::Pointer loadDicomVolume(std::string src) 
+	typename itk::SmartPointer<itk::Image<PixelType, 3>> loadDicomVolume(std::string src) 
 	{
 		const unsigned int      Dimension = 3;
 		typedef itk::Image< PixelType, Dimension > ImageType;
@@ -101,8 +102,8 @@ public:
 				std::cout << ex << std::endl;
 				return NULL;
 			}
-
-			return reader->GetOutput();
+			itk::Image<PixelType, 3>::Pointer result = reader->GetOutput();
+			return result;
 		}
 		catch (itk::ExceptionObject &ex)
 		{
