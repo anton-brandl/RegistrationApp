@@ -67,11 +67,8 @@ void ConfigWin::registerImages()
 	typedef itk::Image< VectorPixelType3D, 3 > DisplacementFieldImageType3D;
 
 	if (ui->rbImage->isChecked()) {
-	//	itk::SmartPointer<ImageType2D> fixedImage = loader.loadDicomImage<PixelType>(image1.toStdString());
-	//	itk::SmartPointer<ImageType2D> movingImage = loader.loadDicomImage<PixelType>(image2.toStdString());
-		
 		Registrator reg;
-		itk::SmartPointer<DisplacementFieldImageType2D> field = reg.deformableRegistrationTest<ImageType2D, DisplacementFieldImageType2D, 2>(fixedImage, movingImage);
+		itk::SmartPointer<DisplacementFieldImageType2D> field = reg.demonsAsymetricRegistration<ImageType2D, DisplacementFieldImageType2D, 2>(fixedImage, movingImage);
 
 		HeatmapVisualizer<ImageType2D, DisplacementFieldImageType2D, 2> heatmapVis;
 
@@ -80,12 +77,8 @@ void ConfigWin::registerImages()
 		heatmapVis.visualize();
 	}
 	else if (ui->rbVolume->isChecked()) {
-//		VolumeType3D::Pointer fixedVolume = loader.loadDicomVolume<PixelType>(image1.toStdString());
-//		VolumeType3D::Pointer movingVolume = loader.loadDicomVolume<PixelType>(image2.toStdString());
-
-
 		Registrator reg;
-		DisplacementFieldImageType3D::Pointer field = reg.deformableRegistrationTest<VolumeType3D, DisplacementFieldImageType3D, 3>(fixedVolume, movingVolume);
+		DisplacementFieldImageType3D::Pointer field = reg.demonsAsymetricRegistration<VolumeType3D, DisplacementFieldImageType3D, 3>(fixedVolume, movingVolume);
 
 		HeatmapVisualizer<VolumeType3D, DisplacementFieldImageType3D, 3> heatmapVis;
 
