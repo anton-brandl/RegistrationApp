@@ -1,17 +1,6 @@
 #include "configwin.h"
 
-itk::SmartPointer<itk::Image<float, 2>> loadDicomImage(std::string src)
-{
-	const    unsigned int    ImageDimension = 2;
-	typedef itk::Image< float, ImageDimension > ImageType;
-	typedef itk::ImageFileReader< ImageType  > ImageReaderType;
 
-	ImageReaderType::Pointer  imageReader = ImageReaderType::New();
-
-	imageReader->SetFileName(src);
-	imageReader->Update();
-	return imageReader->GetOutput();
-}
 
 ConfigWin::ConfigWin(QWidget *parent) :
     QDialog(parent),
@@ -21,15 +10,20 @@ ConfigWin::ConfigWin(QWidget *parent) :
 	image_view_fixed = vtkSmartPointer<vtkResliceImageViewer>::New();
 	image_view_moving = vtkSmartPointer<vtkResliceImageViewer>::New();
 
-	ui->txtFixedImagePath->setText("endExhale.IMA");
+	/*ui->txtFixedImagePath->setText("endExhale.IMA");
 	ui->txtMovingImagePath->setText("endInhale.IMA");
-	ui->txtOutputPath->setText("output.mha");
+	ui->txtOutputPath->setText("output.mha");*/
 	ui->comboTransformType->addItem("Translation");
-	ui->comboMetricType->addItem("MeanSquares"); 
+	ui->comboTransformType->addItem("BSpline Transform");
+	ui->comboTransformType->addItem("Warp Image Filter<");
+	ui->comboMetricType->addItem("MeanSquares");
 	ui->comboOptimizerType->addItem("RegularStepGradientDescent");
+	ui->comboOptimizerType->addItem("LBFGSB"); 
+	ui->comboRegistrationType->addItem("BSpline-Grid");
+	ui->comboRegistrationType->addItem("FEM based");
+	ui->comboRegistrationType->addItem("Demons Registration");
 	
 
-	connect(ui->btnTest, SIGNAL(released()), this, SLOT(testOutput()));
 	connect(ui->btnRegister, SIGNAL(released()), this, SLOT(registerImages()));
 	connect(ui->btnSelectMovingImage, SIGNAL(released()), this, SLOT(browseMovingImage()));
 	connect(ui->btnSelectFixedImage, SIGNAL(released()), this, SLOT(browseFixedImage()));
@@ -122,7 +116,6 @@ void ConfigWin::browseOutput()
 {
 	QString filename = QFileDialog::getSaveFileName(this, tr("Open Fixed Image"), "", "All Files (*.*);;Siemens Dicom (*.IMA);;Dicom (*.dcm)");
 	ui->txtOutputPath->setText(filename);
-	updateShowMovingImage();
 }
 
 void ConfigWin::updateShowFixedImage() {
@@ -150,28 +143,41 @@ void ConfigWin::updateShowImage(Imagetype type)
 	QVTKWidget* widget;
 	vtkSmartPointer<vtkResliceImageViewer> image_view;
 	ConnectorType2D::Pointer connector2d = ConnectorType2D::New();
-	ConnectorType3D::Pointer connector3d = ConnectorType3D::New();
+	ConnectorType3D::Pointer connector3d = ConnectorType3D::New(); 
+	if (fixedImage != nullptr && movingImage != nullptr) {
+		ui->btnRegister->setEnabled(true);
+	}
+	else if (fixedVolume != nullptr &&movingVolume != nullptr) {
+		ui->btnRegister->setEnabled(true);
+	}
+	else {
+		ui->btnRegister->setEnabled(false);
+	}
 	if (type == Imagetype::Fixed)
 	{
-		
 		widget = ui->qvtkFixed;
 		image_view = image_view_fixed;
-		if (ui->rbVolume->isChecked()) {
+		if (ui->rbVolume->isChecked() && fixedVolume != nullptr) {
 			connector3d->SetInput(fixedVolume);
-		} else if (ui->rbImage->isChecked()) {
+		} else if (ui->rbImage->isChecked() && fixedImage !=nullptr) {
 			connector2d->SetInput(fixedImage);
+		}
+		else {
+			return;
 		}
 	}
 	else if (type == Imagetype::Moving)
 	{
-		
 		widget = ui->qvtkMoving;		
 		image_view = image_view_moving; 
-		if (ui->rbVolume->isChecked()) {
+		if (ui->rbVolume->isChecked()&& movingVolume!=nullptr) {
 			connector3d->SetInput(movingVolume);
 		}
-		else if (ui->rbImage->isChecked()) {
+		else if (ui->rbImage->isChecked() && movingImage!=nullptr) {
 			connector2d->SetInput(movingImage);
+		}
+		else {
+			return;
 		}
 	}
 
@@ -200,10 +206,13 @@ void ConfigWin::updateShowImage(Imagetype type)
 	image_view->SetInputData(flipYFilter->GetOutput());
 	image_view->SetSlice(image_view->GetSliceMax() / 2);
 	image_view->GetRenderer()->ResetCamera();
+	image_view->SetColorWindow(255);
+	image_view->SetColorLevel(128);
 	image_view->Render();
 
 
 	widget->update();
+	
 }
 
 void ConfigWin::loadImage(Imagetype type) {
@@ -218,12 +227,21 @@ void ConfigWin::loadImage(Imagetype type) {
 	typedef itk::Image<PixelType, 3> VolumeType3D;
 	typedef itk::Vector< PixelType, 3 > VectorPixelType3D;
 	typedef itk::Image< VectorPixelType3D, 3 > DisplacementFieldImageType3D;
+	if (type == Imagetype::Fixed && fixed == "") {
+		fixedImage = nullptr;
+		return;
+	}
+	else if (type == Imagetype::Moving && moving == "") {
+		movingImage=nullptr;
+		return;
+	}
+
 
 	if (ui->rbImage->isChecked()) {
 		if (type==Imagetype::Fixed)
-			fixedImage = loadDicomImage(fixed.toStdString());
+			fixedImage = loader.loadDicomImage<PixelType>(fixed.toStdString());
 		else if (type==Imagetype::Moving)
-			movingImage = loadDicomImage(moving.toStdString());
+			movingImage = loader.loadDicomImage<PixelType>(moving.toStdString());
 	}
 	else if (ui->rbVolume->isChecked()) {
 		if (type == Imagetype::Fixed)

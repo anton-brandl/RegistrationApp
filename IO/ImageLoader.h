@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <vector>
 
+#include "itkRescaleIntensityImageFilter.h"
 //typedef itk::Image<float, 2> Image2dType;
 //typedef itk::Image<float, 3> Volume3dType;
 class ImageLoader
@@ -15,7 +16,7 @@ class ImageLoader
 public:
 	
 	template <typename PixelType>
-	typename itk::SmartPointer<itk::Image<PixelType, 2>> loadDicomImage(std::string src)
+	itk::SmartPointer<itk::Image<float, 2>> loadDicomImage(std::string src)
 	{
 		const    unsigned int    ImageDimension = 2;
 		typedef itk::Image< float, ImageDimension > ImageType;
@@ -25,7 +26,16 @@ public:
 
 		imageReader->SetFileName(src);
 		imageReader->Update();
-		return imageReader->GetOutput();
+
+		typedef itk::RescaleIntensityImageFilter<
+			ImageType, ImageType > rescaleFilterType;
+
+		rescaleFilterType::Pointer rescaler = rescaleFilterType::New();
+		rescaler->SetOutputMinimum(0);
+		rescaler->SetOutputMaximum(255);
+		rescaler->SetInput(imageReader->GetOutput());
+		rescaler->Update();
+		return rescaler->GetOutput();
 	}
 	
 
@@ -103,7 +113,15 @@ public:
 				return NULL;
 			}
 			itk::Image<PixelType, 3>::Pointer result = reader->GetOutput();
-			return result;
+			typedef itk::RescaleIntensityImageFilter<
+				ImageType, ImageType > rescaleFilterType;
+
+			rescaleFilterType::Pointer rescaler = rescaleFilterType::New();
+			rescaler->SetOutputMinimum(0);
+			rescaler->SetOutputMaximum(255);
+			rescaler->SetInput(reader->GetOutput());
+			rescaler->Update();
+			return rescaler->GetOutput();
 		}
 		catch (itk::ExceptionObject &ex)
 		{

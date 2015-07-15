@@ -30,6 +30,7 @@
 #include <vtkActor.h>
 #include <vtkInteractorStyleImage.h>
 
+#include "itkThresholdImageFilter.h"
 
 template <class ImageType, class FieldType, unsigned int Dimension>
 class HeatmapVisualizer : public Visualizer<ImageType, FieldType, Dimension> 
@@ -58,12 +59,18 @@ class HeatmapVisualizer : public Visualizer<ImageType, FieldType, Dimension>
 			rescaler->SetInput(magnitudeFilter->GetOutput());
 			rescaler->Update();
 			
+			typedef itk::ThresholdImageFilter<ImageType> ThresholdFilterType;
+			ThresholdFilterType::Pointer thresholdFilter = ThresholdFilterType::New();
+			thresholdFilter->SetInput(rescaler->GetOutput());
+			thresholdFilter->ThresholdOutside(100, 255);
+			thresholdFilter->SetOutsideValue(0);
+			
 			typedef itk::RGBPixel<unsigned char>    RGBPixelType;
 			typedef itk::Image<RGBPixelType, Dimension>  RGBImageType;
   
 			typedef itk::ScalarToRGBColormapImageFilter<ImageType, RGBImageType> RGBFilterType;
 			RGBFilterType::Pointer rgbfilter = RGBFilterType::New();
-			rgbfilter->SetInput(rescaler->GetOutput());
+			rgbfilter->SetInput(thresholdFilter->GetOutput());
 			rgbfilter->SetColormap(RGBFilterType::Hot);
 
 			//viewer.AddRGBImage(rgbfilter->GetOutput(), true, "Displacement field magnitudes heatmap");
@@ -96,67 +103,6 @@ class HeatmapVisualizer : public Visualizer<ImageType, FieldType, Dimension>
 			rgbconnector->Update();
 
 			vtkSmartPointer<vtkImageData> anatomy = rgbconnector->GetOutput();
-
-
-
-			//GLYPHS
-
-			// Setup the arrows
-
-			/*
-			// Create actors
-			vtkSmartPointer<vtkImageSliceMapper> imageMapper = vtkSmartPointer<vtkImageSliceMapper>::New();
-
-			imageMapper->SetInputData(anatomy);
-
-
-			vtkSmartPointer<vtkImageSlice> imageSlice = vtkSmartPointer<vtkImageSlice>::New();
-			imageSlice->SetMapper(imageMapper);
-
-			vtkSmartPointer<vtkArrowSource> arrowSource = vtkSmartPointer<vtkArrowSource>::New();
-			arrowSource->Update();
-			vtkSmartPointer<vtkGlyph3D> glyphFilter = vtkSmartPointer<vtkGlyph3D>::New();
-			glyphFilter->SetSourceConnection(arrowSource->GetOutputPort());
-			glyphFilter->OrientOn();
-			glyphFilter->SetVectorModeToUseVector();
-			glyphFilter->SetInputData(vFieldConnector->GetOutput());
-			glyphFilter->SetScaleModeToDataScalingOff();
-			glyphFilter->SetScaleFactor(3);
-			glyphFilter->Update();
-
-			vtkSmartPointer<vtkPolyDataMapper> vectorMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-			vectorMapper->SetInputConnection(glyphFilter->GetOutputPort());
-			vectorMapper->ScalarVisibilityOn();
-
-			vtkSmartPointer<vtkActor> vectorActor = vtkSmartPointer<vtkActor>::New();
-			vectorActor->SetMapper(vectorMapper);
-
-			// Setup renderer
-			vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-
-
-			// Setup render window
-			vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
-			renderWindow->AddRenderer(renderer);
-
-			// Setup render window interactor
-			vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor2 = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-			// Render and start interaction
-			renderWindowInteractor2->SetRenderWindow(renderWindow);
-
-			renderer->AddViewProp(imageSlice);
-			renderer->AddActor(vectorActor);
-
-			renderWindow->Render();
-			//renderWindowInteractor2->Initialize();
-
-			renderWindowInteractor2->Start();
-
-			*/
-
-
-
-
 
 
 			vtkSmartPointer<vtkImageBlend> blend =
